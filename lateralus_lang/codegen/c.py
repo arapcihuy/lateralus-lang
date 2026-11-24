@@ -200,6 +200,12 @@ _TYPE_MAP: Dict[str, str] = {
     # Function type → function pointer (generic)
     "fn":     "void*",
     "Fn":     "void*",
+    # Containers: without these the emitter writes `static list f(...)`,
+    # which is not a C type and fails to compile.
+    "list":   "ltl_list_t*",
+    "dict":   "ltl_map_t*",
+    "map":    "ltl_map_t*",
+    "set":    "ltl_map_t*",
 }
 
 

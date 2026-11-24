@@ -21,7 +21,11 @@ REF = ROOT / "reference"
 RESULTS = ROOT / "results"
 BUILD = ROOT / "build"
 
-BENCHMARKS = ["fib", "sieve", "mandelbrot", "binary_trees", "nbody"]
+BENCHMARKS = [
+    "fib", "sieve", "mandelbrot", "binary_trees", "nbody",
+    "xxhash64", "radix_sort_u32", "chacha20_encrypt", "lz4_roundtrip",
+    "aho_corasick",
+]
 
 
 def time_cmd(cmd: list[str], *, timeout: float = 120.0) -> tuple[float, str]:
@@ -157,9 +161,15 @@ def main() -> int:
     print("\n=== Correctness ===")
     for bench, backs in results["benchmarks"].items():
         outs = {b: v.get("output") for b, v in backs.items() if "output" in v}
-        unique = set(outs.values())
+        if bench == "lz4_roundtrip":
+            # The compressed length legitimately differs per encoder, so the
+            # round-trip checksum is the correctness signal for this one.
+            unique = {o.split("\n")[-1] for o in outs.values() if o and o != "skip"}
+            label = "checksum"
+        else:
+            unique, label = set(outs.values()), "output"
         status = "OK" if len(unique) == 1 else "MISMATCH"
-        print(f"  {bench:14s} {status}  {outs}")
+        print(f"  {bench:14s} {status}  ({label}) {outs}")
 
     # Markdown table
     md_lines = ["# Lateralus Benchmark Results\n"]
